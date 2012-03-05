@@ -1,0 +1,12 @@
+Description:
+lightbulb_rc is a program which takes a CSV file containing data about a particular substance (such as a tungsten filament) and some parameters for a simple RC circuit. The capacitor is assumed to be ideal, and the specific heat capacity of the material is assumed to account for radiative heat loss of the material. Basically we want to simulate the application of the capacitor to the resistive material, calculating the new temperature of the material as well as its resistivity and specific heat.
+
+Usage:
+lightbulb_rc property_file.csv area length density Farads Volts
+Where property_file.csv is a comma seperated file with a column for temperature, resistivity, and specific heat in that order.
+area is the area of the material described by property_file.csv
+length is the length of the material described by property_file.csv
+density is the density of the material described by property_file.csv
+Farads is the capacitance of the capacitor, in Farads
+Volts is the initial voltage of the capacitor, in Volts
+
