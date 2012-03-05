@@ -5,13 +5,23 @@ using System.IO;
 class parameters
 {
     protected StreamReader inf;
+    protected StreamWriter outf;
     protected List<tempprops> properties;
+    //Capacitance in Farads
     public double farads;
+    //Voltage in V
     public double volts;
+    //Charge in C
+    public double charge;
+    //Area in mm^2
     public double area;
+    //Length in mm
     public double length;
+    //Mass in kg
     public double mass;
-
+    public const double MIN_HEAT = 0.0001;
+    public const double INITIAL_TEMP = 300;
+    public const double TIME_STEP = 0.0000001;
     public parameters(string[] args)
     {
         if (args.Length < 6)
@@ -19,14 +29,40 @@ class parameters
         //Commands: material properties.csv output.csv area length density farads volts
         //                   0              1          2    3      4       5      6
         inf = new StreamReader(args[0]);
+        outf = new StreamWriter(args[1]);
         area = double.Parse(args[2]);
         length = double.Parse(args[3]);
         double density = double.Parse(args[4]);
-        mass = density * area * length;
+        //Convert density from g/cm^3 to kg/mm^3 giving us mass in kg
+        mass = density * area * length * 0.000001;
         farads = double.Parse(args[5]);
         volts = double.Parse(args[6]);
+        charge = volts * farads;
         properties = new List<tempprops>();
         parseinf();
+    }
+
+    public void simulate()
+    {
+        double heat;
+        double temp = INITIAL_TEMP;
+        double time = 0.0;
+        outf.WriteLine("Time (s),Temperature (K),Charge (C),Voltage (V),Current (A),Resistance (Ohm),Resistivity (uOhm*cm),Heat (J),Specific Heat (J/kg/K)");
+        do
+        {
+            tempprops prop = getparams(temp);
+//            Console.WriteLine(prop.ToString());
+            double resistance = prop.resist * length / area * 0.00001;
+            double current = volts / resistance;
+            heat = current * volts;
+            outf.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+                time, temp, charge, volts, current, resistance, prop.resist, heat * TIME_STEP, prop.spheat);
+            temp += heat * TIME_STEP / prop.spheat / mass;
+            charge -= current * TIME_STEP;
+            volts = charge / farads;
+            time += TIME_STEP;
+        } while (heat > MIN_HEAT && temp < 3600);
+        outf.Flush();
     }
 
     public tempprops getparams(double temp)
@@ -54,7 +90,8 @@ class parameters
             ind1--;
         }
         tempprops prop = properties[ind1].interpolate(properties[ind2], temp);
-        properties.Insert(ind2, prop);
+        //No real point of the following
+        //properties.Insert(ind2, prop);
         return prop;
     }
 
@@ -130,8 +167,6 @@ class parameters
                 }
             }
         }
-        foreach (tempprops t in properties)
-            Console.WriteLine("{0,10} {1,10} {2,10}", t.temp, t.resist, t.spheat);
     }
 
     public struct tempprops : IComparable
@@ -143,13 +178,19 @@ class parameters
         //The specific heat of the material
         public double spheat;
 
+        public override string ToString()
+        {
+            string s = String.Format("{0} K  {1} uOhm*cm  {2} J/kg/K", temp, resist, spheat);
+            return s;
+        }
+
         public tempprops interpolate(tempprops bound, double temp)
         {
             tempprops t = new tempprops();
             double rinc = bound.resist - resist;
             double sinc = bound.spheat - spheat;
-            rinc /= bound.temp - temp;
-            sinc /= bound.temp - temp;
+            rinc /= bound.temp - this.temp;
+            sinc /= bound.temp - this.temp;
             t.resist = rinc * (temp - this.temp) + resist;
             t.spheat = sinc * (temp - this.temp) + spheat;
             t.temp = temp;
@@ -210,11 +251,10 @@ class lightbulb_rc
             System.Console.WriteLine(e.StackTrace);
             throw e;
         }
-
+        props.simulate();
 
     }
 
-    protected FileStream outf;
 
     static int Main(string[] args)
     {
