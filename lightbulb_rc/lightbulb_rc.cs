@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using ZedGraph;
 
 namespace lightbulb_rc
 {
@@ -44,10 +45,17 @@ namespace lightbulb_rc
             initchildren();
             inputtoggler = new d_toggleinput(toggleinput);
             changetext = new d_settext(settext);
+            zgupdater = new d_updatezg(updategraph);
         }
 
         void initchildren()
         {
+            zgraph1.Location = new Point(10, 10);
+            zgraph1.Size = new Size(splitContainer1.Panel2.Width - 20, splitContainer1.Panel2.Height - 20);
+            GraphPane gpane = zgraph1.GraphPane;
+            gpane.Title.Text = "Capacitor Voltage";
+            gpane.XAxis.Title.Text = "Time (ms)";
+            gpane.YAxis.Title.Text = "Volts (V)";
             txt_infname.Text = "tungsten.csv";
             txt_outfname.Text = "tungsten.out.csv";
             txt_outfname.Focus();
@@ -67,13 +75,9 @@ namespace lightbulb_rc
         private void btn_simulate_Click(object sender, EventArgs e)
         {
             if (bck_sim.IsBusy)
-            {
                 bck_sim.CancelAsync();
-            }
             else
-            {
                 bck_sim.RunWorkerAsync();
-            }
         }
 
         private void btn_load_Click(object sender, EventArgs e)
@@ -107,9 +111,23 @@ namespace lightbulb_rc
             BackgroundWorker worker = (BackgroundWorker)sender;
             bool cont = true;
             sim.siminit();
+            PointPairList volts = new PointPairList();
+            GraphPane gpane = zgraph1.GraphPane;
+            volts.Add(new PointPair(0, sim.volts));
+            gpane.CurveList = new CurveList();
+            gpane.AddCurve("Voltage", volts, Color.Red, SymbolType.None);
+            int i = 0;
             while (!worker.CancellationPending && cont)
             {
                 cont = sim.simstep();
+                gpane.CurveList[0].AddPoint(sim.time, sim.volts);
+                zgraph1.AxisChange();
+                i++;
+                if (i > 1000)
+                {
+                    zgraph1.Invoke(zgupdater);
+                    i = 0;
+                }
             }
             if (worker.CancellationPending)
                 e.Cancel = true;
@@ -129,6 +147,7 @@ namespace lightbulb_rc
             txt_maxtemp.Invoke(inputtoggler, new object[] { txt_maxtemp });
             txt_minpower.Invoke(inputtoggler, new object[] { txt_minpower });
             txt_timestep.Invoke(inputtoggler, new object[] { txt_timestep });
+            zgraph1.Invoke(zgupdater);
             sim.simend();
         }
 
@@ -239,10 +258,23 @@ namespace lightbulb_rc
             b.Text = text;
         }
 
+        private void splitContainer1_Panel2_Resize(object sender, EventArgs e)
+        {
+            zgraph1.Location = new Point(10, 10);
+            zgraph1.Size = new Size(splitContainer1.Panel2.Width - 20, splitContainer1.Panel2.Height - 20);
+        }
+
+        private void updategraph()
+        {
+            zgraph1.Refresh();
+        }
+
         private simulator sim;
         private delegate void d_toggleinput(TextBox t);
         private delegate void d_settext(Button b, string text);
+        private delegate void d_updatezg();
         private d_toggleinput inputtoggler;
+        private d_updatezg zgupdater;
         private d_settext changetext;
     }
 
@@ -371,7 +403,7 @@ namespace lightbulb_rc
             charge -= current * TIME_STEP;
             volts = charge / farads;
             time += TIME_STEP;
-            return (heat > MIN_HEAT) && (temp < MAX_TEMP);
+            return (heat > MIN_HEAT) && (MAX_TEMP > 0 ? (temp < MAX_TEMP) : true);
         }
 
         public void simend()

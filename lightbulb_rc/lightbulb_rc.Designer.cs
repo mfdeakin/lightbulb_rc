@@ -58,11 +58,13 @@
             this.txt_timestep = new System.Windows.Forms.TextBox();
             this.btn_simulate = new System.Windows.Forms.Button();
             this.btn_exit = new System.Windows.Forms.Button();
+            this.zgraph1 = new ZedGraph.ZedGraphControl();
             this.bck_sim = new System.ComponentModel.BackgroundWorker();
             this.of_dialog = new System.Windows.Forms.OpenFileDialog();
             this.sf_dialog = new System.Windows.Forms.SaveFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -72,16 +74,20 @@
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.flowLayoutPanel1);
+            this.splitContainer1.Panel1MinSize = 0;
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.BackColor = System.Drawing.Color.White;
+            this.splitContainer1.Panel2.Controls.Add(this.zgraph1);
+            this.splitContainer1.Panel2.Resize += new System.EventHandler(this.splitContainer1_Panel2_Resize);
             this.splitContainer1.Size = new System.Drawing.Size(588, 347);
             this.splitContainer1.SplitterDistance = 286;
             this.splitContainer1.TabIndex = 0;
@@ -408,6 +414,21 @@
             this.btn_exit.UseVisualStyleBackColor = true;
             this.btn_exit.Click += new System.EventHandler(this.btn_exit_Click);
             // 
+            // zgraph1
+            // 
+            this.zgraph1.Font = new System.Drawing.Font("Liberation Sans", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.zgraph1.Location = new System.Drawing.Point(10, 10);
+            this.zgraph1.Name = "zgraph1";
+            this.zgraph1.ScrollGrace = 0D;
+            this.zgraph1.ScrollMaxX = 0D;
+            this.zgraph1.ScrollMaxY = 0D;
+            this.zgraph1.ScrollMaxY2 = 0D;
+            this.zgraph1.ScrollMinX = 0D;
+            this.zgraph1.ScrollMinY = 0D;
+            this.zgraph1.ScrollMinY2 = 0D;
+            this.zgraph1.Size = new System.Drawing.Size(295, 347);
+            this.zgraph1.TabIndex = 0;
+            // 
             // bck_sim
             // 
             this.bck_sim.WorkerReportsProgress = true;
@@ -429,11 +450,13 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(588, 347);
             this.Controls.Add(this.splitContainer1);
+            this.MinimumSize = new System.Drawing.Size(604, 385);
             this.Name = "lightbulb_rc";
             this.Text = "Lightbulb RC";
             this.Load += new System.EventHandler(this.lightbulb_rc_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
+            this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
@@ -481,5 +504,6 @@
         private System.ComponentModel.BackgroundWorker bck_sim;
         private System.Windows.Forms.OpenFileDialog of_dialog;
         private System.Windows.Forms.SaveFileDialog sf_dialog;
+        private ZedGraph.ZedGraphControl zgraph1;
     }
 }
